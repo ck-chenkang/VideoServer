@@ -1,0 +1,8 @@
+{
+    "bin": "D:\\VideoServer\\videoServer.js",
+    "pkg": {
+        "assets": [
+            "D:\\VideoServer\\node_modules"  
+        ]
+    }
+} 

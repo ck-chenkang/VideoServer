@@ -1,0 +1,18 @@
+{
+    "maxNumber": "32",
+    "DeviceNumber":"2",
+    "Quality":"2",
+    "history":"2",
+    "ipInner":"127.0.0.1",
+    "ipPublic":"192.168.210.115",
+    "videoInfo": {
+        "urlHighDefinition": [
+            "rtsp://admin:a12345678@192.168.235.110:554/Streaming/Channels/101?transportmode=unicast",
+            "rtsp://admin:a12345678@192.168.235.110:554/Streaming/Channels/201?transportmode=unicast"
+        ],
+        "urlStanardDefinition": [
+            "rtsp://admin:a12345678@192.168.235.110:554/Streaming/Channels/102?transportmode=unicast",
+            "rtsp://admin:a12345678@192.168.235.110:554/Streaming/Channels/202?transportmode=unicast"
+        ]
+    }
+}
