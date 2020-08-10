@@ -443,21 +443,29 @@ app.put('/video/quit', jsonParser, function (req, res) {
     return;
   }
 
+  var newDeviceNumberList = new Array();
+  deviceNumberList.forEach(element=>{
+    newDeviceNumberList.push(element);
+    newDeviceNumberList.push(element*1 + 1000);
+  });
+
+
   var num = 0;
   var indexNum = 0;
   // 判断设备是否已经下线,修改下线过的设备列表
-  var listLength = deviceNumberList.length;
-  deviceNumberList.forEach(element=>{
+  var listLength = newDeviceNumberList.length;
+  newDeviceNumberList.forEach(element=>{
     // 没有查到设备
     if(!global.deviceIdAndTime.has(element))
     {
       num++;
-      deviceNumberList.splice(indexNum, 1);
+      newDeviceNumberList.splice(indexNum, 1);
     }
     indexNum++;
   })
 
-  if(listLength == num){
+  
+  if(listLength == num ){
     res.send(
       {
         "code": 1,
@@ -470,7 +478,7 @@ app.put('/video/quit', jsonParser, function (req, res) {
 
   var deviceFlag = true;
   // 下线设备
-  deviceNumberList.forEach(element => {
+  newDeviceNumberList.forEach(element => {
     // 杀session里的设备
     global.sessionIdDeviceMap.forEach((value, key) => {
       // 当sessionId和global.sessionIdDeviceMap里面相等的时候
