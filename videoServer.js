@@ -453,8 +453,8 @@ app.put('/video/quit', jsonParser, function (req, res) {
         var index = value.indexOf(element);
         // sessionIdDeviceMap对应的sesssion里面有相应的设备的时候
         if (index > -1) {
-          console.log("下线设备：global.sessionIdDeviceMap.get(key): ");
-          console.log( global.sessionIdDeviceMap.get(key));
+          // console.log("下线设备：global.sessionIdDeviceMap.get(key): ");
+          // console.log( global.sessionIdDeviceMap.get(key));
           global.sessionIdDeviceMap.get(key).splice(index, 1);
         }
       }
@@ -469,9 +469,9 @@ app.put('/video/quit', jsonParser, function (req, res) {
       // 杀设备
       global.deviceIdAndTime.delete(element);
       // 杀进程
-      console.log("杀进程了：" + element);
-      console.log("进程信息：global.deviceRun.get(key)");
-      console.log(global.deviceRun.get(element));
+      // console.log("杀进程了：" + element);
+      // console.log("进程信息：global.deviceRun.get(key)");
+      // console.log(global.deviceRun.get(element));
       global.deviceRun.get(element).stdin.pause();
       global.deviceRun.get(element).kill();
       global.deviceRun.delete(element);
@@ -495,15 +495,15 @@ app.put('/video/quit', jsonParser, function (req, res) {
 })
 
 app.get('/globalInfo', function (req, res) {
-  console.log("打印全局信息");
-  console.log("global.deviceRun: ");
-  console.log(global.deviceRun);
-  console.log("global.deviceIdAndTime: ");
-  console.log(global.deviceIdAndTime);
-  console.log("global.sessionIdAndTime:");
-  console.log(global.sessionIdAndTime);
-  console.log("global.sessionIdDeviceMap:");
-  console.log(global.sessionIdDeviceMap);
+  // console.log("打印全局信息");
+  // console.log("global.deviceRun: ");
+  // console.log(global.deviceRun);
+  // console.log("global.deviceIdAndTime: ");
+  // console.log(global.deviceIdAndTime);
+  // console.log("global.sessionIdAndTime:");
+  // console.log(global.sessionIdAndTime);
+  // console.log("global.sessionIdDeviceMap:");
+  // console.log(global.sessionIdDeviceMap);
   res.send("成功了");
 })
 
@@ -575,9 +575,9 @@ var server = app.listen(65500, function () {
           }
         })
 
-        console.log("杀进程了：" + key);
-        console.log("进程信息：global.deviceRun.get(key)");
-        console.log(global.deviceRun.get(key));
+        // console.log("杀进程了：" + key);
+        // console.log("进程信息：global.deviceRun.get(key)");
+        // console.log(global.deviceRun.get(key));
 
         // 杀设备
         global.deviceIdAndTime.delete(key);
