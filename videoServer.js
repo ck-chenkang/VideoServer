@@ -187,7 +187,7 @@ app.post('/video/liveBroadcast', jsonParser, function (req, res) {
     return;
   }
 
-  // 判断sessionId是否存在，== -1 表示不存在
+  // 判断sessionId是否存在
   if (!global.sessionIdAndTime.has(sessionId)) {
     res.send(
       {
@@ -241,20 +241,43 @@ app.post('/video/liveBroadcast', jsonParser, function (req, res) {
     );
     return;
   }
-  deviceNumberList.forEach(element => {
-    // 如果文件夹不存在，就创建新的文件夹
-    var folder = __dirname + "\\live" + "\\" + element;
-    if (!fs.existsSync(folder)) {
-      fs.mkdirSync(folder);
-    }
-  });
+
+    // 创建设备输出文件夹
+   // ==1，创建的文件夹，是设备ID
+    if(type == 1 || type == undefined){
+    deviceNumberList.forEach(element => {
+      // 如果文件夹不存在，就创建新的文件夹
+      var folder = __dirname + "\\live" + "\\" + element;
+      if (!fs.existsSync(folder)) {
+        fs.mkdirSync(folder);
+      }
+    });
+  }
+  //==2，创建的文件夹，是设备ID + 1000 
+  if(type == 2){
+    deviceNumberList.forEach(element => {
+      // 如果文件夹不存在，就创建新的文件夹
+      var folder = __dirname + "\\live" + "\\" + (element*1 + 1000);
+      if (!fs.existsSync(folder)) {
+        fs.mkdirSync(folder);
+      }
+    });
+  }
 
   //ffmpeg的路径
   var cmd = __dirname + "\\ffmpeg\\bin\\ffmpeg.exe";
-
+  var url = [];
   // 创建进程
   deviceNumberList.forEach(element => {
-    var element = element.trim();
+    element = element.trim();
+    if(type == 1 || type == undefined){
+      ;
+    }
+
+    if(type == 2){
+      element = element*1 + 1000;
+    }
+
     // 判断进程存不存在
     if(global.deviceRun.has(element) && global.deviceIdAndTime.has(element)){
       ;
@@ -269,13 +292,11 @@ app.post('/video/liveBroadcast', jsonParser, function (req, res) {
       }
 
       var spawn = require('child_process').spawn;
-      if (type == undefined || type == 1) {
-        var rtspPath = global.configInfo.videoInfo.urlStanardDefinition[element - 1];
-      }
-      if (type == 2) {
-        var rtspPath = global.configInfo.videoInfo.urlHighDefinition[element - 1];
-      }
+
+      var rtspPath = global.configInfo.videoInfo.urlStanardDefinition[element - 1];
+
       var outFile = __dirname + "\\live\\" + element + "\\" + element + ".m3u8";
+
       var args = [
         '-r', '25',
         '-i', rtspPath,
@@ -310,15 +331,14 @@ app.post('/video/liveBroadcast', jsonParser, function (req, res) {
 
       // 将进程信息放到全局变量里
       global.deviceRun.set(element, run);
-
-      var myDate = new Date;
+      var myDate = new Date();
       // 记录已经转码的设备号,上线时间
       global.deviceIdAndTime.set(element, myDate.getTime());
       }
   });
 
   // 返回的url 
-  var url = [];
+  
   deviceNumberList.forEach(element => {
     var str = "http://" + global.configInfo.ipPublic + ":" + global.port + "/live/"
       + sessionId + "/" + element.trim() + "/" + element.trim() + ".m3u8";
@@ -505,7 +525,7 @@ app.put('/video/quit', jsonParser, function (req, res) {
           global.sessionIdDeviceMap.get(key).splice(index, 1);
         }
       }
-      // 判断设备进程需不需要杀死
+      // 判断其他的sesseionID里面还有没有进程，如果有，就不要执行杀设备，杀进程
       if(global.sessionIdDeviceMap.get(key).indexOf(element) > -1)
       {
         deviceFlag = false;
@@ -564,6 +584,10 @@ var server = app.listen(65500, function () {
   // 这里定义设备信息
   // global.deviceRun存放设备的编号和进程的对应关系
   // global.deviceIdAndTime存放设备的编号和最新访问时间
+
+  // 增加画质控制，决定，设备ID + 1000，作为高清画质的ID
+  // 对应sessionId里面的参数也是如此对应ID + 1000
+
   global.deviceRun = new Map();
   global.deviceIdAndTime = new Map();
 
@@ -591,6 +615,8 @@ var server = app.listen(65500, function () {
   // 定时清理会话,两分钟清理一次
   setInterval(() => {
     var myDate = new Date();
+    var info = "["+myDate.getFullYear()+ "-" + myDate.getMonth() + "-"+ myDate.getDay() + "   " + myDate.getHours() + ":" + myDate.getMinutes() + ":" + myDate.getSeconds() + "]  ";
+    console.log(info + "定时清理会话正在运行！！！\r\n");
     global.sessionIdAndTime.forEach((value, key) => {
       if ((myDate.getTime() - value) / 1000 / 60 > 2) {
         // console.log(global.sessionIdAndTime);
@@ -612,7 +638,7 @@ var server = app.listen(65500, function () {
   setInterval(() => {
     var myDate = new Date();
     var info = "["+myDate.getFullYear()+ "-" + myDate.getMonth() + "-"+ myDate.getDay() + "   " + myDate.getHours() + ":" + myDate.getMinutes() + ":" + myDate.getSeconds() + "]  ";
-    console.log(info + "视频服务器正在运行！！！\r\n");
+    console.log(info + "定时清理设备正在运行！！！\r\n");
     global.deviceIdAndTime.forEach((value, key) => {
       if ((myDate.getTime() - value) / 1000 / 60 > 2) {
         var deviceKey = key;
