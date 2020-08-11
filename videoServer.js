@@ -10,11 +10,32 @@ var jsonParser = bodyParser.json();
 
 const CryptoJS = require('crypto-js');  //引用AES源码js
 
+
+const key = CryptoJS.enc.Utf8.parse("SONTECH-TEXPRO");  //十六位十六进制数作为密钥
+const iv = CryptoJS.enc.Utf8.parse('ABCDEF1234123412');   //十六位十六进制数作为密钥偏移量
+
+//解密方法
+function Decrypt(word) {
+  let encryptedHexStr = CryptoJS.enc.Hex.parse(word);
+  let srcs = CryptoJS.enc.Base64.stringify(encryptedHexStr);
+  let decrypt = CryptoJS.AES.decrypt(srcs, key, { iv: iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 });
+  let decryptedStr = decrypt.toString(CryptoJS.enc.Utf8);
+  return decryptedStr.toString();
+}
+
+//加密方法
+function Encrypt(word) {
+  let srcs = CryptoJS.enc.Utf8.parse(word);
+  let encrypted = CryptoJS.AES.encrypt(srcs, key, { iv: iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 });
+  return encrypted.ciphertext.toString().toUpperCase();
+}
+
+
+
 // 指定静态文件
 // app.use(express.static(__dirname + '\\live'));
 
 app.all('*', function(req, res, next) {
-
   // 跨域访问
   res.header("Access-Control-Allow-Origin", "*");
   res.header('Access-Control-Allow-Methods', 'PUT, GET, POST, DELETE, OPTIONS');
@@ -28,7 +49,6 @@ app.all('*', function(req, res, next) {
 
 //上线请求
 app.post('/video/Online', jsonParser, function (req, res) {
-
   //1、 判断请求是否有参数  
   //2、 判断请求的key是否正确
   if (Object.keys(req.body).length === 0) {
@@ -42,42 +62,69 @@ app.post('/video/Online', jsonParser, function (req, res) {
         }
       }
     );
-  } else if (req.body.key === global.key) {
-    // 生成随机数，作为sessionId
-    var id = Math.random(1).toString().split('.')[1];
-    // 当sessionId已存在，重新生成
-    while (global.sessionIdAndTime.has(id)) {
-      id = Math.random(1).toString().split('.')[1];
-    }
+    return;
+  } 
 
-    // 记录id及时间
-    // 获得当前时间（从1970.1.1开始的毫秒数）,并把它放到全局sessionIdTime里面
-    var myDate = new Date();
-    global.sessionIdAndTime.set(id, myDate.getTime());
+  var key = Decrypt(req.body.key);
 
-    // 初始化global.sessionIdDeviceMap
-    global.sessionIdDeviceMap.set(id, new Array());
+  console.log("解密后的key：");
+  console.log(key);
+  // 根据约定，key是一个由设备编号组成的字符串，如："1,2,3,4,5"
+  if(key.indexOf("，") > -1 || key == undefined){
     res.send(
-      {
-        "code": 1,
-        "msg": "操作成功",
-        "data": {
-          "sessionId": id,
+        {
+          "code": 0,
+          "msg": "操作失败",
+          "data": {
+            "sessionId": "",
+            "info": "请检查key是否正确"
+          }
         }
-      }
-    )
-  } else {
-    res.send(
-      {
-        "code": 0,
-        "msg": "操作失败",
-        "data": {
-          "sessionId": id,
-          "info": "请检查key是否正确"
-        }
-      }
-    )
+      );
+      return;
   }
+
+  key = key.split(",");
+  key.forEach(element => {
+    if(element > global.configInfo.DeviceNumber || element <= 0){
+        res.send(
+            {
+              "code": 0,
+              "msg": "操作失败",
+              "data": {
+                "sessionId": "",
+                "info": "请检查key是否正确"
+              }
+            }
+          );
+          return;
+    }
+  });
+
+  
+  // 生成随机数，作为sessionId
+  var id = Math.random(1).toString().split('.')[1];
+  // 当sessionId已存在，重新生成
+  while (global.sessionIdAndTime.has(id)) {
+    id = Math.random(1).toString().split('.')[1];
+  }
+
+  // 记录id及时间
+  // 获得当前时间（从1970.1.1开始的毫秒数）,并把它放到全局sessionIdTime里面
+  var myDate = new Date();
+  global.sessionIdAndTime.set(id, myDate.getTime());
+
+  // 初始化global.sessionIdDeviceMap
+  global.sessionIdDeviceMap.set(id, new Array());
+  res.send(
+    {
+      "code": 1,
+      "msg": "操作成功",
+      "data": {
+        "sessionId": id,
+      }
+    }
+  )
 })
 
 
@@ -513,6 +560,7 @@ var server = app.listen(65500, function () {
   global.port = server.address().port;
 
   global.key = "key";
+
   // 这里定义设备信息
   // global.deviceRun存放设备的编号和进程的对应关系
   // global.deviceIdAndTime存放设备的编号和最新访问时间
@@ -619,4 +667,3 @@ function deleteFiles(folderPath) {
     });
   }
 }
-

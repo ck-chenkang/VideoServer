@@ -585,7 +585,6 @@ var server = app.listen(65500, function () {
   // global.deviceRunHigh存放设备的编号和进程的对应关系，高清
   // global.deviceIdAndTime存放设备的编号和最新访问时间
   global.deviceRun = new Map();
-  global.deviceRunHigh = new Map();
   global.deviceIdAndTime = new Map();
 
   // 这里定义用户会话信息
