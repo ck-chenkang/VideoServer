@@ -385,7 +385,7 @@ app.put('/video/quit', jsonParser, function (req, res) {
   }
 
   // 分离设备编号
-  var deviceNumberList = number.split(",");
+  var deviceNumberList = Array.from(number.split(","));
   var maxNumber = Math.max.apply(Math, Array.from(deviceNumberList));
   // 判断设备number是否正确
   if (global.configInfo.videoInfo.urlHighDefinition.length < maxNumber) {
@@ -534,11 +534,11 @@ var server = app.listen(65500, function () {
   var myAppDate = new Date();
   var time = myAppDate.getFullYear() + "-" + myAppDate.getMonth() + "-" + myAppDate.getDay() + "-" + myAppDate.getHours() + ":" +  myAppDate.getMinutes() + ":" + myAppDate.getSeconds();
   console.log("应用程序已启动：" + host + port);
-  fs.appendFileSync(__dirname + "\\log.txt", time +   "\r\n" + "应用程序已经启动了: " + host + port + "\r\n\r\n", function(err){
-    if(err){
-      ;
-    }
-  })
+  // fs.appendFileSync(__dirname + "\\log.txt", time +   "\r\n" + "应用程序已经启动了: " + host + port + "\r\n\r\n", function(err){
+  //   if(err){
+  //     ;
+  //   }
+  // })
 
   // 定时清理会话,两分钟清理一次
   setInterval(() => {
@@ -558,11 +558,13 @@ var server = app.listen(65500, function () {
       }
     }
     );
-  }, 5000);
+  }, 1000);
 
   // 定时清理设备,也是两分钟清理一次
   setInterval(() => {
     var myDate = new Date();
+    var info = "["+myDate.getFullYear()+ "-" + myDate.getMonth() + "-"+ myDate.getDay() + "   " + myDate.getHours() + ":" + myDate.getMinutes() + ":" + myDate.getSeconds() + "]  ";
+    console.log(info + "视频服务器正在运行！！！\r\n");
     global.deviceIdAndTime.forEach((value, key) => {
       if ((myDate.getTime() - value) / 1000 / 60 > 2) {
         var deviceKey = key;
@@ -597,7 +599,13 @@ var server = app.listen(65500, function () {
       }
     }
     );
-  }, 5000);
+  }, 1000);
+  
+  setInterval(() => {
+    var myDate = new Date();
+    var info = "["+myDate.getFullYear()+ "-" + myDate.getMonth() + "-"+ myDate.getDay() + "   " + myDate.getHours() + ":" + myDate.getMinutes() + ":" + myDate.getSeconds() + "]  ";
+    console.log(info + "视频服务器正在运行！！！\r\n");
+  }, 1000);
 })
 
 function deleteFiles(folderPath) {
