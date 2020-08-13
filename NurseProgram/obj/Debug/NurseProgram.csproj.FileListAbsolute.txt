@@ -12,3 +12,10 @@ E:\01——三技\06程序\Videos\04-对接云数据库守护进程\NurseProgram
 E:\01——三技\06程序\Videos\04-对接云数据库守护进程\NurseProgram\obj\Debug\NurseProgram.csproj.CoreCompileInputs.cache
 E:\01——三技\06程序\Videos\04-对接云数据库守护进程\NurseProgram\obj\Debug\NurseProgram.exe
 E:\01——三技\06程序\Videos\04-对接云数据库守护进程\NurseProgram\obj\Debug\NurseProgram.pdb
+D:\VideoServer\NurseProgram\bin\Debug\NurseProgram.exe.config
+D:\VideoServer\NurseProgram\bin\Debug\NurseProgram.exe
+D:\VideoServer\NurseProgram\bin\Debug\NurseProgram.pdb
+D:\VideoServer\NurseProgram\obj\Debug\NurseProgram.csprojAssemblyReference.cache
+D:\VideoServer\NurseProgram\obj\Debug\NurseProgram.csproj.CoreCompileInputs.cache
+D:\VideoServer\NurseProgram\obj\Debug\NurseProgram.exe
+D:\VideoServer\NurseProgram\obj\Debug\NurseProgram.pdb

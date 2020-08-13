@@ -18,7 +18,8 @@ namespace NurseProgram
             CreateProcess(camera);
 
             Thread thread = new Thread(Ccout);
-            thread.IsBackground = false;
+            thread.IsBackground = true;
+            
             thread.Start();
             while (true)
             {
@@ -35,7 +36,7 @@ namespace NurseProgram
         {
             //启动这个进程
             var decodeProcess = new Process
-            {
+            { 
                 StartInfo = new ProcessStartInfo
                 {
                     //Environment.CurrentDirectory 这个是获取本应用程序的路径
@@ -46,7 +47,7 @@ namespace NurseProgram
                     RedirectStandardInput = false,
                     RedirectStandardOutput = false,
                     RedirectStandardError = false,
-                    CreateNoWindow = true
+                    CreateNoWindow = false
                 }
             };
             decodeProcess.Start();
@@ -54,9 +55,11 @@ namespace NurseProgram
             ProcessInfo processInfo = new ProcessInfo()
             {
                 processId = decodeProcess.Id,
+                processName = decodeProcess.MainWindowTitle,
                 cameraInfo = camera
             };
             //添加进程信息
+
             listProcess.Add(processInfo);
 
         }
@@ -69,12 +72,15 @@ namespace NurseProgram
                 try
                 {
                     //获取所有叫jt进程内的信息
-                    Process[] processIdAry = Process.GetProcessesByName("runShortCut");
+                    //Process[] processIdAry = Process.GetProcessesByName("runShortCut");
+                    
                     //循环我们的信息
                     foreach (var oneProcess in listProcess)
-                    {
+                    {   
+                        Process processIdAry = Process.GetProcessById(oneProcess.processId);
                         //如果我们这个ID程序在我们都Pid中出现
-                        if (processIdAry.Where(n => n.Id == oneProcess.processId).Count() > 0)
+                        //if (processIdAry.Where(n => n.Id == oneProcess.processId).Count() > 0)
+                        if (processIdAry.Id == oneProcess.processId)
                         {
 #if true
                             Console.WriteLine("成功维护一次");
@@ -83,13 +89,13 @@ namespace NurseProgram
                         else
                         {
 
-                            Console.WriteLine("一个进程中断，正在执行重启任务");
+                            //Console.WriteLine("一个进程中断，正在执行重启任务");
                             listProcess.Remove(oneProcess);
                             //获取带过去的参数
                             CameraInfo camera = oneProcess.cameraInfo;
                             //重启这个进程
                             CreateProcess(camera);
-                            Console.WriteLine("重启成功");
+                            //Console.WriteLine("重启成功");
                         }
                     }
                 }
@@ -109,6 +115,7 @@ namespace NurseProgram
     public class ProcessInfo
     {
         public int processId { get; set; }
+        public object processName { get; set;}
         public CameraInfo cameraInfo { get; set; }
     }
 }
