@@ -1,8 +1,27 @@
 {
     "maxNumber": "32",
-    "DeviceNumber":"2",
-    "Quality":"2",
-    "history":"2",
+    "DeviceNumber":"128",
+    "account":"admin",
+    "passwrd":"a12345678",
+    "nvrNumber":"4",
+    "nvrIpInfo":{
+        "num1":{
+            "ip":"192.168.235.110",
+            "maxDeviceNum":"32"
+        },
+        "num2":{
+            "ip":"192.168.1.11",
+            "maxDeviceNum":"64"
+        },
+        "num3":{
+            "ip":"192.168.1.12",
+            "maxDeviceNum":"96"
+        },
+        "num4":{
+            "ip":"192.168.1.13",
+            "maxDeviceNum":"128"
+        }
+    },
     "ipInner":"127.0.0.1",
     "ipPublic":"192.168.210.115",
     "videoInfo": {
