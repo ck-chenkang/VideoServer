@@ -286,10 +286,11 @@ app.post('/video/liveBroadcast', jsonParser, function (req, res) {
   deviceNumberList.forEach(element => {
     element = element.trim();
     if(type == 1 || type == undefined){
-      ;
+      var rtspPath = global.configInfo.videoInfo.urlStanardDefinition[element - 1];
     }
 
     if(type == 2){
+      var rtspPath = global.configInfo.videoInfo.urlHighDefinition[element - 1];
       element = element*1 + 1000;
     }
 
@@ -307,8 +308,6 @@ app.post('/video/liveBroadcast', jsonParser, function (req, res) {
       }
 
       var spawn = require('child_process').spawn;
-
-      var rtspPath = global.configInfo.videoInfo.urlStanardDefinition[element - 1];
 
       var outFile = __dirname + "\\live\\" + element + "\\" + element + ".m3u8";
 
@@ -353,10 +352,19 @@ app.post('/video/liveBroadcast', jsonParser, function (req, res) {
   });
 
   // 返回的url 
-  
   deviceNumberList.forEach(element => {
+    if(type == 1 || type == undefined){
+        ;
+    }
+    if(type == 2){
+      element = element*1 + 1000;
+    }
+    
     var str = "http://" + global.configInfo.ipPublic + ":" + global.port + "/live/"
-      + sessionId + "/" + element.trim() + "/" + element.trim() + ".m3u8";
+      + sessionId + "/" + element + "/" + element + ".m3u8";
+    // var str = "http://" + global.configInfo.ipPublic + ":" + global.port + "/live/"
+    //   + sessionId + "/" + element.trim() + "/" + element.trim() + ".m3u8";
+
     url.push(str);
   });
 
@@ -412,7 +420,6 @@ app.get('/live/:sessionId/:deviceId/:uid', function (req, res) {
 
   // 根据url，动态修改path，uid不能写成常量，会出错
   var path = __dirname + "\\live\\" + deviceId + "\\" + uid;
-  fs.existsSync(path);
 
   // 如果文件存在
   if(fs.existsSync(path)){
@@ -754,9 +761,10 @@ app.put('/video/quit', jsonParser, function (req, res) {
     return;
   }
 
-  var deviceFlag = true;
+
   // 下线设备
   deviceNumberList.forEach(element => {
+    var deviceFlag = true;
     // 杀session里的设备
     global.sessionIdDeviceMap.forEach((value, key) => {
       // 当sessionId和global.sessionIdDeviceMap里面相等的时候
@@ -767,6 +775,11 @@ app.put('/video/quit', jsonParser, function (req, res) {
           // console.log("下线设备：global.sessionIdDeviceMap.get(key): ");
           // console.log( global.sessionIdDeviceMap.get(key));
           global.sessionIdDeviceMap.get(key).splice(index, 1);
+
+          var indexHigh = value.indexOf(element*1 + 1000);
+          if(indexHigh > -1){
+            global.sessionIdDeviceMap.get(key).splice(indexHigh, 1);
+          }
         }
       }
       // 判断其他的sesseionID里面还有没有进程，如果有，就不要执行杀设备，杀进程
@@ -793,6 +806,24 @@ app.put('/video/quit', jsonParser, function (req, res) {
         deleteFiles(path);
       }catch(e){
         ;
+      }
+
+      if(global.deviceIdAndTime.has(element*1 + 1000)){
+        global.deviceIdAndTime.delete(element*1 + 1000);
+      }
+
+      if(global.deviceRun.has(element*1 + 1000)){
+        global.deviceRun.get(element*1 + 1000).stdin.pause();
+        global.deviceRun.get(element*1 + 1000).kill();
+        global.deviceRun.delete(element*1 + 1000);
+        // 清理文件
+        var pathHigh = __dirname + "\\" + "live\\" + (element*1 + 1000);
+        try{
+          deleteFiles(pathHigh);
+        }catch(e){
+          ;
+        }
+  
       }
     }
   })
