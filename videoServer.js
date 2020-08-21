@@ -292,6 +292,7 @@ app.post('/video/liveBroadcast', jsonParser, function (req, res) {
     if(type == 2){
       var rtspPath = global.configInfo.videoInfo.urlHighDefinition[element - 1];
       element = element*1 + 1000;
+      element = element.toString();
     }
 
     // 判断进程存不存在
@@ -358,6 +359,7 @@ app.post('/video/liveBroadcast', jsonParser, function (req, res) {
     }
     if(type == 2){
       element = element*1 + 1000;
+      element = element.toString();
     }
     
     var str = "http://" + global.configInfo.ipPublic + ":" + global.port + "/live/"
@@ -409,8 +411,6 @@ app.get('/live/:sessionId/:deviceId/:uid', function (req, res) {
 
   // 修改设备的访问时间
   global.deviceIdAndTime.set(deviceId, myDate.getTime());
-
-  // 增加访问量
   // 如果等于-1表示当前会话里没有这个设备，所以要把这个设备加进去
   if(global.deviceRun.has(deviceId) && global.deviceIdAndTime.has(deviceId)){
     if (global.sessionIdDeviceMap.get(sessionId).indexOf(deviceId) == -1) {
@@ -428,7 +428,6 @@ app.get('/live/:sessionId/:deviceId/:uid', function (req, res) {
     res.writeHead(200, { "msg": "1" });
     fs.createReadStream(path).pipe(res);
   }
-
 });
 
 
@@ -456,7 +455,7 @@ app.post('/video/playback', jsonParser, function (req, res) {
   var numberList = number.split(",");
   // 判断前端是否发送需要的数据
   if (number === undefined || number.includes("，") || sessionId === undefined || 
-  startTime == undefined || numberList == undefined) {
+  startTime === undefined || numberList === undefined) {
     res.send(
       {
         "code": 0,
@@ -487,7 +486,7 @@ app.post('/video/playback', jsonParser, function (req, res) {
 
 
   // 回放的设备的数量只能有一个
-  if(numberList.length != 1){
+  if(numberList.length > 1){
     res.send(
       {
         "code": 0,
@@ -501,6 +500,7 @@ app.post('/video/playback', jsonParser, function (req, res) {
     return;
   }
   
+  // 限制设备最大的编号
   if(parseInt(number) >  parseInt(global.configInfo.DeviceNumber) || parseInt(number) <=0){
     res.send(
       {
@@ -532,8 +532,9 @@ app.post('/video/playback', jsonParser, function (req, res) {
     return;
   }
  
+  var numberId = (number*1 + 2000).toString();
   // 判断这台设备有没有在回放
-  if(global.deviceRun.has(number*1 + 2000)){
+  if(global.deviceRun.has(numberId)){
     res.send(
       {
         "code": 0,
@@ -586,12 +587,22 @@ app.post('/video/playback', jsonParser, function (req, res) {
   time = time.replace("-", "");
   time = time.replace(":", "");
   time = time.replace(":", "");
-  time = time.replace(" ", "");
+  time = time.replace(" ", "t");
 
   // 创建文件夹
-  var folder = __dirname + "\\history" + "\\" + number;
+  var folder = __dirname + "\\live\\" + (number*1 + 2000);
+  // var folder = __dirname + "\\history" + "\\" + number;
   if (!fs.existsSync(folder)) {
     fs.mkdirSync(folder);
+  }
+
+  // 如果文件夹存在，就清空问价夹下的内容
+  // 不清空，回放会有问题
+
+  try{
+    deleteFiles(folder);
+  }catch(e){
+    ;
   }
 
   var cmd = __dirname + "\\ffmpeg\\bin\\ffmpeg.exe";
@@ -607,21 +618,22 @@ app.post('/video/playback', jsonParser, function (req, res) {
       nvrIp = global.configInfo.nvrIpInfo[numId].ip;
       if(i == 0){
         var serialNumInner = number;
+        serialNum = serialNumInner;
       }else{
-        var serialNumInner = number - global.configInfo.nvrIpInfo[numId - 1].maxDeviceNum
+        var serialNumInner = number - global.configInfo.nvrIpInfo[numId - 1].maxDeviceNum;
+        serialNum = serialNumInner;
       }
       break;
     }
   }
-  serialNum = serialNumInner;
 
-  var rtspPath = "rtsp://" + global.configInfo.account + ":" + global.configInfo.passwrd + "@" +
+  var rtspPath = "rtsp://" + global.configInfo.account + ":" + global.configInfo.password + "@" +
   nvrIp + ":554" + "/Streaming/tracks/" + serialNum +  "01?starttime=" + time + "z";
 
   var outFile = __dirname + "\\live\\" + (number*1 + 2000) + "\\" + (number*1 + 2000) + ".m3u8";
-
+  console.log(rtspPath);
   var args = [
-    '-rtsp_transport', 'tcp', '-re',
+    '-rtsp_transport', 'tcp',
     '-i', rtspPath,
     '-c:v', 'libx264', '-an',
     '-f', 'hls',
@@ -634,36 +646,39 @@ app.post('/video/playback', jsonParser, function (req, res) {
   run = spawn(cmd, args);
   // 捕获标准输出并将其打印到控制台
   run.stdout.on('data', function (data) {
-    console.log('standard output:\n' + data);
+    // console.log('standard output:\n' + data);
   });
 
   // 捕获标准错误输出并将其打印到控制台 
   run.stderr.on('data', function (data) {
-    console.log('standard error:\n' + data);
+    // console.log('standard error:\n' + data);
   });
 
   // 注册子进程关闭事件 
   run.on('exit', function (code, signal) {
-    console.log('child process eixt ,exit:' + signal);
+    // console.log('child process eixt ,exit:' + signal);
   });
 
   // 将进程信息放到全局变量里
-  global.deviceRun.set(number*1 + 2000, run);
+  global.deviceRun.set((number*1 + 2000).toString(), run);
   var myDate = new Date();
   // 记录已经转码的设备号,上线时间
-  global.deviceIdAndTime.set(number*1 + 2000, myDate.getTime());
-  console.log(run);
+  global.deviceIdAndTime.set((number*1 + 2000).toString(), myDate.getTime());
+  // console.log(global.deviceRun);
+  // console.log(global.deviceIdAndTime);
+
+  var str = "http://" + global.configInfo.ipPublic + ":" + global.port + "/live/"
+  + sessionId + "/" + (number*1 + 2000) + "/" + (number*1 + 2000) + ".m3u8";
+
   res.send(
     {
       "code": 1,
       "msg": "操作成功",
       "data": {
-        "url": [],
-        "info": time
+        "url": str
       }
     }
   );
-
 })
 
 //下线请求
@@ -736,69 +751,99 @@ app.put('/video/quit', jsonParser, function (req, res) {
     return;
   }
 
-  var num = 0;
-  var indexNum = 0;
-  // 判断设备是否已经下线,修改下线过的设备列表
-  var listLength = deviceNumberList.length;
-  deviceNumberList.forEach(element=>{
-    // 没有查到设备
-    if(!global.deviceIdAndTime.has(element))
-    {
-      num++;
-      deviceNumberList.splice(indexNum, 1);
-    }
-    indexNum++;
-  })
+  // // var num = 0;
+  // var indexNum = 0;
+  // // 判断设备是否已经下线,修改下线过的设备列表
+  // var listLength = deviceNumberList.length;
+  // deviceNumberList.forEach(element=>{
+  //   // 没有查到设备
+  //   if(!global.deviceIdAndTime.has(element))
+  //   {
+  //     // num++;
+  //     deviceNumberList.splice(indexNum, 1);
+  //   }
+  //   indexNum++;
+  // })
 
-  if(listLength == num){
-    res.send(
-      {
-        "code": 1,
-        "msg": "操作失败",
-        "data": "视频已经下线"
-      }
-    )
-    return;
-  }
+
+  // if(deviceNumberList.length == 0){
+  //   res.send(
+  //     {
+  //       "code": 1,
+  //       "msg": "操作失败",
+  //       "data": "视频已经下线"
+  //     }
+  //   )
+  //   return;
+  // }
 
 
   // 下线设备
   deviceNumberList.forEach(element => {
+
     var deviceFlag = true;
+    var deviceFlagHigh = true;
+    var deviceFlagHistory = true;
+
+
+    var elementHigh = (element*1 + 1000).toString();
+    var elementHistory = (element*1 + 2000).toString();
     // 杀session里的设备
     global.sessionIdDeviceMap.forEach((value, key) => {
       // 当sessionId和global.sessionIdDeviceMap里面相等的时候
       if(key == sessionId){
-        var index = value.indexOf(element);
-        // sessionIdDeviceMap对应的sesssion里面有相应的设备的时候
-        if (index > -1) {
-          // console.log("下线设备：global.sessionIdDeviceMap.get(key): ");
-          // console.log( global.sessionIdDeviceMap.get(key));
-          global.sessionIdDeviceMap.get(key).splice(index, 1);
 
-          var indexHigh = value.indexOf(element*1 + 1000);
-          if(indexHigh > -1){
-            global.sessionIdDeviceMap.get(key).splice(indexHigh, 1);
-          }
+        // 如果有标清
+        var index = value.indexOf(element);
+        if (index > -1) {
+          global.sessionIdDeviceMap.get(key).splice(index, 1);
+        }else{
+          deviceFlag = false;
+        }
+
+        // 如果有高清
+        var indexHigh = value.indexOf(elementHigh);
+        if(indexHigh > -1){
+          global.sessionIdDeviceMap.get(key).splice(indexHigh, 1);
+        }else{
+          deviceFlagHigh = false;
+        }
+
+        // 如果有历史
+        var indexHistory = value.indexOf(elementHistory);
+        if(indexHistory > -1){
+          global.sessionIdDeviceMap.get(key).splice(indexHistory, 1);
+        }else{
+          deviceFlagHistory = false;
         }
       }
+
       // 判断其他的sesseionID里面还有没有进程，如果有，就不要执行杀设备，杀进程
       if(global.sessionIdDeviceMap.get(key).indexOf(element) > -1)
       {
         deviceFlag = false;
       }
+
+      if(global.sessionIdDeviceMap.get(key).indexOf(elementHigh) > -1){
+        deviceFlagHigh = false;
+      }
+
+      if(global.sessionIdDeviceMap.get(key).indexOf(elementHistory) > -1){
+        deviceFlagHistory = false;
+      }
     })
 
     if(deviceFlag){
-      // 杀设备
+      console.log("deviceFlag:" + deviceFlag);
+
       global.deviceIdAndTime.delete(element);
-      // 杀进程
-      // console.log("杀进程了：" + element);
-      // console.log("进程信息：global.deviceRun.get(key)");
-      // console.log(global.deviceRun.get(element));
-      global.deviceRun.get(element).stdin.pause();
-      global.deviceRun.get(element).kill();
-      global.deviceRun.delete(element);
+      if(global.deviceRun.get(element) == undefined ){
+        ;
+      }else{
+        global.deviceRun.get(element).stdin.pause();
+        global.deviceRun.get(element).kill();
+        global.deviceRun.delete(element);
+      }
 
       // 清理文件
       var path = __dirname + "\\" + "live\\" + element;
@@ -807,26 +852,54 @@ app.put('/video/quit', jsonParser, function (req, res) {
       }catch(e){
         ;
       }
+    }
 
-      if(global.deviceIdAndTime.has(element*1 + 1000)){
-        global.deviceIdAndTime.delete(element*1 + 1000);
+    if(deviceFlagHigh){
+      console.log("deviceFlagHigh:" + deviceFlagHigh);
+
+      global.deviceIdAndTime.delete(elementHigh);
+      if(global.deviceRun.get(elementHigh) == undefined ){
+        ;
+      }else{
+        global.deviceRun.get(elementHigh).stdin.pause();
+        global.deviceRun.get(elementHigh).kill();
+        global.deviceRun.delete(elementHigh);
       }
 
-      if(global.deviceRun.has(element*1 + 1000)){
-        global.deviceRun.get(element*1 + 1000).stdin.pause();
-        global.deviceRun.get(element*1 + 1000).kill();
-        global.deviceRun.delete(element*1 + 1000);
-        // 清理文件
-        var pathHigh = __dirname + "\\" + "live\\" + (element*1 + 1000);
-        try{
-          deleteFiles(pathHigh);
-        }catch(e){
-          ;
-        }
-  
+
+      // 清理文件
+      var path = __dirname + "\\" + "live\\" + elementHigh;
+      try{
+        deleteFiles(path);
+      }catch(e){
+        ;
+      }
+
+    }
+
+    if(deviceFlagHistory){
+      console.log("deviceFlagHistory:" + deviceFlagHistory);
+
+      global.deviceIdAndTime.delete(elementHistory);
+
+      if(global.deviceRun.get(elementHistory) == undefined ){
+        ;
+      }else{
+        global.deviceRun.get(elementHistory).stdin.pause();
+        global.deviceRun.get(elementHistory).kill();
+        global.deviceRun.delete(elementHistory);
+      }
+      // 清理文件
+      var path = __dirname + "\\" + "live\\" + elementHistory;
+      try{
+        deleteFiles(path);
+      }catch(e){
+        ;
       }
     }
   })
+
+
   res.send(
     {
       "code": 1,
@@ -926,17 +999,10 @@ var server = app.listen(65500, function () {
   // 定时清理会话,两分钟清理一次
   setInterval(() => {
     var myDate = new Date();
-    var info = "["+myDate.getFullYear()+ "-" + myDate.getMonth() + "-"+ myDate.getDay() + "   " + myDate.getHours() + ":" + myDate.getMinutes() + ":" + myDate.getSeconds() + "]  ";
-    console.log(info + "定时清理会话正在运行！！！\r\n");
     global.sessionIdAndTime.forEach((value, key) => {
       if ((myDate.getTime() - value) / 1000 / 60 > 2) {
         // console.log(global.sessionIdAndTime);
         // 将sessionId和time信息清理掉
-        console.log("杀session信息: global.sessionIdAndTime.get(key)");
-        console.log(global.sessionIdAndTime.get(key));
-        console.log("杀session信息: global.sessionIdDeviceMap.get(key)");
-        console.log(global.sessionIdDeviceMap.get(key));
-
         global.sessionIdAndTime.delete(key);
         // 将sessionId及其绑定的Device信息清理掉
         global.sessionIdDeviceMap.delete(key);
@@ -948,9 +1014,8 @@ var server = app.listen(65500, function () {
   // 定时清理设备,也是两分钟清理一次
   setInterval(() => {
     var myDate = new Date();
-    var info = "["+myDate.getFullYear()+ "-" + myDate.getMonth() + "-"+ myDate.getDay() + "   " + myDate.getHours() + ":" + myDate.getMinutes() + ":" + myDate.getSeconds() + "]  ";
-    console.log(info + "定时清理设备正在运行！！！\r\n");
     global.deviceIdAndTime.forEach((value, key) => {
+
       if ((myDate.getTime() - value) / 1000 / 60 > 2) {
         var deviceKey = key;
         // 杀session里的设备
@@ -958,21 +1023,22 @@ var server = app.listen(65500, function () {
           var index = value.indexOf(deviceKey);
           // sessionIdDeviceMap对应的sesssion里面有相应的设备的时候
           if (index > -1) {
-            global.sessionIdDeviceMap.get(key).splice(index, 1);
+            global.sessionIdDeviceMap.get(key.toString()).splice(index, 1);
           }
         })
 
-        // console.log("杀进程了：" + key);
-        // console.log("进程信息：global.deviceRun.get(key)");
-        // console.log(global.deviceRun.get(key));
-
         // 杀设备
         global.deviceIdAndTime.delete(key);
-
+        console.log(key.toString());
         // 杀进程
-        global.deviceRun.get(key).stdin.pause();
-        global.deviceRun.get(key).kill();
-        global.deviceRun.delete(key);
+        console.log(global.deviceRun.get(key.toString()));
+        if(global.deviceRun.get(key.toString()) == undefined ){
+
+        }else{
+          global.deviceRun.get(key.toString()).stdin.pause();
+          global.deviceRun.get(key.toString()).kill();
+          global.deviceRun.delete(key.toString());
+        }
 
         // 清理文件
         var path = __dirname + "\\" + "live\\" + key;
@@ -989,7 +1055,7 @@ var server = app.listen(65500, function () {
   setInterval(() => {
     var myDate = new Date();
     var info = "["+myDate.getFullYear()+ "-" + myDate.getMonth() + "-"+ myDate.getDay() + "   " + myDate.getHours() + ":" + myDate.getMinutes() + ":" + myDate.getSeconds() + "]  ";
-    console.log(info + "视频服务器正在运行！！！\r\n");
+    // console.log(info + "视频服务器正在运行！！！\r\n");
   }, 1000);
 })
 

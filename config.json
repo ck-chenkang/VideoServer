@@ -1,13 +1,13 @@
 {
     "maxNumber": "32",
-    "DeviceNumber":"128",
+    "DeviceNumber":"2",
     "account":"admin",
-    "passwrd":"a12345678",
-    "nvrNumber":"4",
+    "password":"a12345678",
+    "nvrNumber":"1",
     "nvrIpInfo":{
         "num1":{
             "ip":"192.168.235.110",
-            "maxDeviceNum":"32"
+            "maxDeviceNum":"2"
         },
         "num2":{
             "ip":"192.168.1.11",
@@ -23,7 +23,7 @@
         }
     },
     "ipInner":"127.0.0.1",
-    "ipPublic":"192.168.210.115",
+    "ipPublic":"192.168.235.105",
     "videoInfo": {
         "urlHighDefinition": [
             "rtsp://admin:a12345678@192.168.235.110:554/Streaming/Channels/101?transportmode=unicast",
