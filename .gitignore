@@ -1,5 +1,1 @@
-live
-node_modules
-videoServer.exe
-videoServer_画质控制.js
-彩辉配置文件
+node_modules/*
