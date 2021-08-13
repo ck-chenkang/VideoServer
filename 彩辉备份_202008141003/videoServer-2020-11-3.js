@@ -566,6 +566,7 @@ app.post('/video/playback', jsonParser, function (req, res) {
   });
 
   // 判断有没有其他设备在回放
+/*
   Array.from(global.deviceIdAndTime.keys()).forEach(element=>{
     if(element > 2000){
       res.send(
@@ -581,6 +582,7 @@ app.post('/video/playback', jsonParser, function (req, res) {
       return;
     }
   });
+*/
 
   // 字符串格式化
   var time = startTime.replace("-", "");
@@ -670,7 +672,7 @@ app.post('/video/playback', jsonParser, function (req, res) {
   var str = "http://" + global.configInfo.ipPublic + ":" + global.port + "/live/"
   + sessionId + "/" + (number*1 + 2000) + "/" + (number*1 + 2000) + ".m3u8";
 
-  // 这里加入文件是否生成做判断
+  // 这里加入文件是否生成做判断 2020-11-3 9:51
   var needReturn = true;
   fs.watch(folder, (event, filename)=>{
     if(needReturn){
@@ -687,6 +689,18 @@ app.post('/video/playback', jsonParser, function (req, res) {
       );
     }
   })
+
+/*
+  res.send(
+    {
+      "code": 1,
+      "msg": "操作成功",
+      "data": {
+        "url": str
+      }
+    }
+  );
+*/
 })
 
 //下线请求

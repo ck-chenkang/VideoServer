@@ -27,7 +27,7 @@
         }
     },
     "ipInner": "192.168.5.133",
-    "ipPublic": "61.146.121.100",
+    "ipPublic": "192.168.5.1",
     "videoInfo": {
         "urlHighDefinition": [
             "rtsp://admin:a12345678@192.168.5.131:554/Streaming/Channels/101?transportmode=unicast",
